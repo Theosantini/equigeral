@@ -55,14 +55,20 @@ pyw = fsolve(eq, pyw0)
 
 #print(pyw)
 
+
+
 eq = GEKKO()
-p1 = eq.Var(value=2)
-p2 = eq.Var(value=2)
-y1 = eq.Var(value=2)
-y2 = eq.Var(value=2)
-w1 = eq.Var(value=2)
-w2 = eq.Var(value=2)
-eq.Obj(-y1 - y2)
+p1 = eq.Var(value=0.8)
+p2 = eq.Var(value=0.8)
+y1 = eq.Var(value=0.8)
+y2 = eq.Var(value=0.8)
+w1 = eq.Var(value=0.8)
+w2 = eq.Var(value=0.8)
+dem_consum_tot = beta[0, 0] * (w1 * dotacao[0, 0] + w2 * dotacao[1, 0]) / p1 + \
+            beta[0, 1] * (w1 * dotacao[0, 1] + w2 * dotacao[1, 1]) / p1 + \
+            beta[1, 0] * (w1 * dotacao[0, 0] + w2 * dotacao[1, 0]) / p2 + \
+            beta[1, 1] * (w1 * dotacao[0, 1] + w2 * dotacao[1, 1]) / p2
+eq.Obj(-1*(dem_consum_tot))
 eq.Equation(beta[0, 0] * (w1 * dotacao[0, 0] + w2 * dotacao[1, 0]) / p1 + \
             beta[0, 1] * (w1 * dotacao[0, 1] + w2 * dotacao[1, 1]) / p1 + \
             A[0, 0] * y1 + A[0, 1] * y2 - y1 == 0)
