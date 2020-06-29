@@ -1,17 +1,19 @@
 # Simular modelo EGC CAP 3
 import numpy as np
 import sys
-from numpy.core._multiarray_umath import ndarray
 from scipy.optimize import *
 
 nNumeroBens = 2
 
 nNumeroFatores = 2
 
-nNumeroDomicilios = 1
+nNumeroDomicilios = 2
+
+nReceitaGoverno = 1
 
 j = nNumeroBens
-nNumeroVariaveis=6
+
+nNumeroVariaveis= nNumeroBens+nNumeroFatores+nNumeroDomicilios+nReceitaGoverno
 
 mDotacao = np.array([[30, 20], [20, 5]])
 
@@ -23,15 +25,25 @@ mAlfa = np.array([[0.8, 0.4], [0.2, 0.6]])
 
 vVa = np.array([0.5, 0.25])
 
+# tTau é taxa de imposto na produção setorial
+
+tTau = np.array([0.0, 0.0])
+
+# tTrf é taxa de transferência de renda para consumidores
+
+tTrf = np.array([0.5, 0.5])
+
 def Modelo(vValores):
     vPrecosBens= vValores[0:nNumeroBens]
     vProducao = vValores[nNumeroBens:(nNumeroBens*2)]
-    vPrecosFatores = vValores[(nNumeroBens*2):]
+    vPrecosFatores = vValores[(nNumeroBens*2):(nNumeroBens*2)+nNumeroFatores]
+    vReceitaGov = vValores[(nNumeroBens*2)+nNumeroFatores:]
 
     mEquacoes = np.empty(nNumeroVariaveis)
     vApoio = np.dot(vPrecosFatores, mDotacao)
     for n in range(nNumeroBens):
-        vApoio2 = np.dot(mBeta[n,:],vApoio.T)
+        vApoio1 = vApoio + tTrf[n]*vReceitaGov
+        vApoio2 = np.dot(mBeta[n,:],vApoio1.T)
         vApoio3 = vApoio2 / vPrecosBens[n]
         vApoio4 = np.dot(mCoefTecnicos[n,:],vProducao.T)
         vApoio5 = vApoio3 + vApoio4 - vProducao[n]
@@ -40,7 +52,7 @@ def Modelo(vValores):
     for k in range(nNumeroFatores):
         vAux=np.zeros(nNumeroBens, dtype=float)
         vApoio2 = np.sum(mDotacao[k,:])
-        nDivisao= vPrecosFatores[0]/vPrecosFatores[1]
+        nDivisao= vPrecosFatores[1]/vPrecosFatores[0]
         if k ==1:
             nDivisao= 1/nDivisao
         for p in range(nNumeroBens):
@@ -64,19 +76,36 @@ def Modelo(vValores):
         for l in range(nNumeroBens):
             nAux2 = nAux2 + vPrecosBens[l]*mCoefTecnicos[l, n]
 
-        mEquacoes[(nNumeroBens+nNumeroFatores)+n] = vPrecosBens[n] - nAux * vVa[n] - nAux2
+        mEquacoes[(nNumeroBens+nNumeroFatores)+n] = (vPrecosBens[n] - nAux * vVa[n] - nAux2)*(1+tTau[n])
+
+    for n in range(nNumeroBens):
+        vAux1 = np.zeros(nReceitaGoverno, dtype=float)
+        nAux = 1
+        for k in range(nNumeroFatores):
+            x = vPrecosFatores[k] ** mAlfa[k, n]
+            nAux = nAux * x
+
+        nAux2 = 0
+        for l in range(nNumeroBens):
+            nAux2 = nAux2 + vPrecosBens[l] * mCoefTecnicos[l, n]
+
+        vAux1 = np.sum((vPrecosBens[n] - nAux * vVa[n] - nAux2) * (tTau[n]))
+
+        mEquacoes[(nNumeroBens + nNumeroFatores + nNumeroDomicilios) + 1] = vAux1
 
     return mEquacoes
 
 if __name__ == '__main__':
-    vValoresIniciais = np.array([1, 0.8, 2, 2, 0.8, 0.8])
+    vValoresIniciais = np.array([1, 0.8, 2, 2, 0.8, 0.8, 0.8])
     vResult = fsolve(Modelo, vValoresIniciais)
     vPrecosBens= vResult[0:nNumeroBens]
     print("Preços dos Bens", vPrecosBens )
     vProducao = vResult[nNumeroBens:(nNumeroBens*2)]
     print("Produção", vProducao )
-    vPrecosFatores = vResult[(nNumeroBens*2):]
+    vPrecosFatores = vResult[(nNumeroBens*2):nNumeroBens*3]
     print("Preços dos Fatores", vPrecosFatores )
+    vReceitaGov = vResult[(nNumeroBens+nNumeroFatores+nNumeroDomicilios):]
+    print("Receita do Governo", vReceitaGov)
     print("End")
     sys.exit(0)
 
