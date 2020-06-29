@@ -79,7 +79,6 @@ def Modelo(vValores):
         mEquacoes[(nNumeroBens+nNumeroFatores)+n] = (vPrecosBens[n] - nAux * vVa[n] - nAux2)*(1+tTau[n])
 
     for n in range(nNumeroBens):
-        vAux1 = np.zeros(nReceitaGoverno, dtype=float)
         nAux = 1
         for k in range(nNumeroFatores):
             x = vPrecosFatores[k] ** mAlfa[k, n]
@@ -89,9 +88,9 @@ def Modelo(vValores):
         for l in range(nNumeroBens):
             nAux2 = nAux2 + vPrecosBens[l] * mCoefTecnicos[l, n]
 
-        vAux1 = np.sum((vProducao[n]) * (vPrecosBens[n] - nAux * vVa[n] - nAux2) * (tTau[n]))
+        nAux1 = ((vProducao[n]) * (vPrecosBens[n] + nAux * vVa[n] + nAux2) * (tTau[n]))
 
-        mEquacoes[(nNumeroBens + nNumeroFatores + nNumeroDomicilios) + 1] = vAux1
+        mEquacoes[(nNumeroBens + nNumeroFatores + nNumeroDomicilios) + 1] = (np.sum(nAux1) - vReceitaGov)
 
     return mEquacoes
 
