@@ -89,7 +89,7 @@ def Modelo(vValores):
         for l in range(nNumeroBens):
             nAux2 = nAux2 + vPrecosBens[l] * mCoefTecnicos[l, n]
 
-        vAux1 = np.sum((vPrecosBens[n] - nAux * vVa[n] - nAux2) * (tTau[n]))
+        vAux1 = np.sum((vProducao[n]) * (vPrecosBens[n] - nAux * vVa[n] - nAux2) * (tTau[n]))
 
         mEquacoes[(nNumeroBens + nNumeroFatores + nNumeroDomicilios) + 1] = vAux1
 
