@@ -41,6 +41,7 @@ def Modelo(vValores):
 
     mEquacoes = np.empty(nNumeroVariaveis)
     vApoio = np.dot(vPrecosFatores, mDotacao)
+    # Equação de consumo
     for n in range(nNumeroBens):
         vApoio1 = vApoio + tTrf[n]*vReceitaGov
         vApoio2 = np.dot(mBeta[n,:],vApoio1.T)
@@ -48,9 +49,9 @@ def Modelo(vValores):
         vApoio4 = np.dot(mCoefTecnicos[n,:],vProducao.T)
         vApoio5 = vApoio3 + vApoio4 - vProducao[n]
         mEquacoes[n] = vApoio5
-
+    # Equação oferta e demanda de fatores
     for k in range(nNumeroFatores):
-        vAux=np.zeros(nNumeroBens, dtype=float)
+        vAux=np.zeros(nNumeroBens)
         vApoio2 = np.sum(mDotacao[k,:])
         nDivisao= vPrecosFatores[1]/vPrecosFatores[0]
         if k ==1:
@@ -65,7 +66,8 @@ def Modelo(vValores):
             vAux[p] = vApoio3 * vApoio1
 
         mEquacoes[nNumeroBens+k] = np.sum(vAux) - vApoio2
-
+    # Equação de produção (lucro zero)
+    nAux1 = 0
     for n in range(nNumeroBens):
         nAux = 1
         for k in range(nNumeroFatores):
@@ -76,21 +78,12 @@ def Modelo(vValores):
         for l in range(nNumeroBens):
             nAux2 = nAux2 + vPrecosBens[l]*mCoefTecnicos[l, n]
 
-        mEquacoes[(nNumeroBens+nNumeroFatores)+n] = (vPrecosBens[n] - nAux * vVa[n] - nAux2)*(1+tTau[n])
+        mEquacoes[(nNumeroBens+nNumeroFatores)+n] = (vPrecosBens[n] - nAux * vVa[n] + nAux2)*(1+tTau[n])
 
-    for n in range(nNumeroBens):
-        nAux = 1
-        for k in range(nNumeroFatores):
-            x = vPrecosFatores[k] ** mAlfa[k, n]
-            nAux = nAux * x
 
-        nAux2 = 0
-        for l in range(nNumeroBens):
-            nAux2 = nAux2 + vPrecosBens[l] * mCoefTecnicos[l, n]
+        nAux1 = nAux1 + vProducao[n] * (nAux * vVa[n] + nAux2) * tTau[n]
 
-        nAux1 = ((vProducao[n]) * (vPrecosBens[n] + nAux * vVa[n] + nAux2) * (tTau[n]))
-
-        mEquacoes[(nNumeroBens + nNumeroFatores + nNumeroDomicilios) + 1] = (np.sum(nAux1) - vReceitaGov)
+    mEquacoes[nNumeroBens + nNumeroFatores + nNumeroDomicilios] = np.sum(nAux1) - vReceitaGov
 
     return mEquacoes
 
