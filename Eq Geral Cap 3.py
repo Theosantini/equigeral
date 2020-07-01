@@ -1,4 +1,5 @@
 # Simular modelo EGC CAP 3
+# Versão 01/07 - resolver erros
 import numpy as np
 import sys
 from scipy.optimize import *
